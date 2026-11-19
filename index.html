@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoreo inteligente de cultivos · Demostración</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Paleta: colores corporativos de la Universidad de América (Manual de Identidad 2025)
+     y complementarios para series de datos. Estados: paleta de estado del sistema de datos. */
+  :root {
+    --brand-dark: #1A2403;
+    --brand-lime: #C8FF01;
+    --brand-yellow: #FFCE00;
+    --series-1: #00A4B5;   /* cian  */
+    --series-2: #FF7900;   /* naranja */
+    --series-3: #7223B7;   /* morado */
+    --good: #0ca30c;
+    --warning: #fab219;
+    --serious: #ec835a;
+    --critical: #d03b3b;
+    --surface: #f4f5f0;
+    --card: #ffffff;
+    --text: #1A2403;
+    --text-2: #4a4f3a;
+    --muted: #6b6f5c;
+    --line: #dfe2d6;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    font-family: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--surface); color: var(--text); font-size: 15px; line-height: 1.5;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
+  header.top { background: var(--card); border-bottom: 4px solid var(--brand-lime); }
+  .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 14px; padding-bottom: 14px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand img { height: 46px; width: auto; display: block; }
+  .brand .fallback { display: none; font-weight: 800; color: var(--brand-dark); }
+  .brand-text h1 { font-size: 18px; margin: 0; font-weight: 800; color: var(--brand-dark); }
+  .brand-text p { margin: 0; font-size: 12.5px; color: var(--muted); }
+  .groups { font-size: 12.5px; color: var(--text-2); text-align: right; }
+  .groups strong { color: var(--brand-dark); }
+  .pill-sim { display: inline-block; background: var(--brand-yellow); color: var(--brand-dark); font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; letter-spacing: .02em; }
+
+  .notice { margin: 16px 0 0; background: #fff8d6; border: 1px solid var(--brand-yellow); border-radius: 10px; padding: 10px 14px; font-size: 13px; color: var(--brand-dark); }
+
+  .toolbar { display: flex; gap: 12px; flex-wrap: wrap; margin: 16px 0; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 180px; }
+  .field label { font-size: 12px; font-weight: 600; color: var(--text-2); }
+  select, button { font: inherit; }
+  select { padding: 9px 10px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--text); }
+  .seg { display: inline-flex; background: #e8ebdf; border-radius: 10px; padding: 3px; }
+  .seg button { border: 0; background: transparent; padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--text-2); font-weight: 600; font-size: 13px; }
+  .seg button[aria-pressed="true"] { background: var(--brand-dark); color: var(--brand-lime); }
+  button.btn { border: 0; background: var(--brand-dark); color: var(--brand-lime); padding: 9px 14px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px; }
+  button.btn.alt { background: #fff; color: var(--brand-dark); border: 1px solid var(--brand-dark); }
+  button.btn:focus-visible, select:focus-visible, .seg button:focus-visible { outline: 3px solid var(--series-1); outline-offset: 2px; }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--line); padding: 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; color: var(--brand-dark); }
+  .section { margin-top: 18px; }
+  .layout { display: grid; gap: 14px; grid-template-columns: 2fr 1fr; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .sensor { position: relative; overflow: hidden; }
+  .sensor::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--st, var(--good)); }
+  .sensor .label { font-size: 12.5px; color: var(--text-2); font-weight: 600; }
+  .sensor .value { font-size: 30px; font-weight: 800; color: var(--text); font-variant-numeric: tabular-nums; margin: 4px 0 2px; }
+  .sensor .unit { font-size: 14px; font-weight: 600; color: var(--muted); margin-left: 4px; }
+  .sensor .meta { font-size: 11.5px; color: var(--muted); }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: #eef0e6; color: var(--text); margin-top: 6px; }
+  .status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--st); }
+
+  .badge-tag { font-size: 10.5px; font-weight: 700; color: var(--brand-dark); background: var(--brand-lime); padding: 1px 7px; border-radius: 6px; margin-left: 6px; vertical-align: middle; }
+
+  .overall { display: flex; align-items: center; gap: 12px; }
+  .overall .big { font-size: 20px; font-weight: 800; }
+  .overall .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--st); }
+
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-2); margin-bottom: 6px; }
+  .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; background: var(--c); }
+  svg.chart { width: 100%; height: auto; display: block; }
+  svg.chart text { font-family: inherit; fill: var(--muted); font-size: 11px; }
+  .tip { font-size: 12.5px; color: var(--text-2); margin-top: 6px; min-height: 18px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 12px; color: var(--text-2); }
+  td.num { font-variant-numeric: tabular-nums; text-align: right; }
+  .prio { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 6px; color: #fff; background: var(--st); }
+  .prio.light { color: var(--brand-dark); }
+  .empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+
+  .irrigation .state { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .irrigation .state .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--st); }
+  .check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; margin: 10px 0; color: var(--text-2); }
+  .check input { margin-top: 3px; }
+  .muted { color: var(--muted); font-size: 12.5px; }
+  .progress { height: 8px; background: #e8ebdf; border-radius: 999px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; background: var(--series-1); width: 0; transition: width .6s ease; }
+
+  .footer { margin: 26px 0 30px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 14px; }
+  .footer strong { color: var(--text-2); }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <img src="https://www.uamerica.edu.co/wp-content/uploads/2026/11/universidad-de-america-logo.webp"
+           alt="Logo Universidad de América"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='inline';">
+      <span class="fallback">Universidad de América</span>
+      <div class="brand-text">
+        <h1>Plataforma de monitoreo inteligente de cultivos</h1>
+        <p>Demostración del prototipo · <span class="pill-sim">DATOS SIMULADOS</span></p>
+      </div>
+    </div>
+    <div class="groups">
+      <div>Semillero de investigación <strong>BioSide</strong></div>
+      <div>Grupo de investigación <strong>GPS</strong></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="notice">
+    <strong>Nota de alcance:</strong> este prototipo muestra lecturas ficticias. No representa mediciones reales ni garantiza recomendaciones agronómicas. Los rangos y reglas deben ajustarse a cada especie, etapa de crecimiento y sistema productivo con apoyo técnico.
+  </div>
+
+  <section class="toolbar" aria-label="Configuración del cultivo">
+    <div class="field">
+      <label for="cultivo">Tipo de sistema</label>
+      <div class="seg" id="sistema" role="group" aria-label="Tipo de sistema">
+        <button type="button" data-val="suelo" aria-pressed="true">En suelo</button>
+        <button type="button" data-val="hidro" aria-pressed="false">Hidropónico</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="especie">Especie / lote (ejemplo)</label>
+      <select id="especie"></select>
+    </div>
+    <div class="field">
+      <label for="modo">Modo de operación</label>
+      <select id="modo">
+        <option value="monitoreo">Monitoreo</option>
+        <option value="manual">Riego manual asistido</option>
+        <option value="auto">Riego automático</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="t-panel">
+    <div class="overall card" style="margin-bottom:14px">
+      <div class="overall">
+        <span class="dot" id="overallDot"></span>
+        <div>
+          <div class="muted">Estado general del cultivo</div>
+          <div class="big" id="overallText">Calculando…</div>
+        </div>
+      </div>
+      <div class="muted" id="lastRead" style="margin-left:auto">Última lectura: —</div>
+    </div>
+    <h2 id="t-panel" class="sr" style="font-size:15px;margin:0 0 10px;color:var(--brand-dark)">Panel principal</h2>
+    <div class="grid" id="sensors"></div>
+  </section>
+
+  <section class="section layout">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <h2 style="margin:0">Evolución por variable</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select id="variable" aria-label="Variable a graficar"></select>
+          <div class="seg" id="rango" role="group" aria-label="Periodo">
+            <button type="button" data-val="dia" aria-pressed="true">Día</button>
+            <button type="button" data-val="semana" aria-pressed="false">Semana</button>
+            <button type="button" data-val="mes" aria-pressed="false">Mes</button>
+          </div>
+        </div>
+      </div>
+      <div class="legend"><span style="--c:var(--series-1)" id="lgLine">Lectura</span><span style="--c:var(--series-2)">Umbral de advertencia</span></div>
+      <svg class="chart" id="chart" viewBox="0 0 720 300" role="img" aria-label="Gráfica de evolución de la variable seleccionada"></svg>
+      <div class="tip" id="tip">Pase el cursor sobre la gráfica para ver el valor.</div>
+      <details style="margin-top:8px">
+        <summary class="muted" style="cursor:pointer">Ver tabla de datos</summary>
+        <div style="max-height:220px;overflow:auto;margin-top:8px"><table id="tablaDatos"></table></div>
+      </details>
+    </div>
+
+    <div class="card irrigation">
+      <h2>Riego</h2>
+      <div class="state"><span class="dot" id="pumpDot"></span><span id="pumpText">Bomba apagada</span><span class="badge-tag">SIMULADO</span></div>
+      <p class="muted" id="pumpInfo" style="margin:8px 0">La bomba o válvula no se activa en el prototipo.</p>
+      <div class="progress" aria-hidden="true"><div id="pumpBar"></div></div>
+      <div id="manualBox" style="margin-top:12px"></div>
+      <p class="muted" style="margin-top:12px">Regla automática de ejemplo: iniciar riego si la humedad del suelo está por debajo de 25 %, con tiempo máximo de 20 s y parada de emergencia.</p>
+      <h2 style="margin-top:14px">Eventos de riego</h2>
+      <table id="tablaRiego"></table>
+    </div>
+  </section>
+
+  <section class="section layout">
+    <div class="card">
+      <h2>Alertas</h2>
+      <table id="tablaAlertas"></table>
+    </div>
+
+    <div class="card">
+      <h2>Módulo de plagas</h2>
+      <p class="muted" style="margin:0 0 8px">Sin cámara ni modelo validado. Este espacio muestra únicamente una función demostrativa.</p>
+      <div class="status" style="--st:var(--warning)"><span class="dot"></span>Inspección pendiente (simulada)</div>
+      <p class="muted" style="margin-top:12px">Esta página no detecta plagas en la versión actual.</p>
+    </div>
+  </section>
+
+  <section class="section card" aria-labelledby="t-rep">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <h2 id="t-rep" style="margin:0">Reporte e historial</h2>
+      <div class="field" style="min-width:220px">
+        <label for="frecuencia">Frecuencia del reporte</label>
+        <select id="frecuencia">
+          <option value="diario">Diario</option>
+          <option value="semanal" selected>Semanal</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="mensual">Mensual</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid" id="resumen" style="margin-bottom:12px"></div>
+    <div style="overflow-x:auto"><table id="tablaReporte"></table></div>
+    <p class="muted" style="margin-top:10px">Nutrientes: datos de ejemplo claramente identificados (no hay dosificador conectado en esta demostración).</p>
+  </section>
+
+  <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn alt" type="button" id="btnFalla">Simular humedad baja</button>
+    <button class="btn alt" type="button" id="btnReset">Reiniciar datos</button>
+  </div>
+
+  <footer class="footer">
+    <p><strong>Semillero de investigación BioSide</strong> · <strong>Grupo de investigación GPS</strong> · Universidad de América, Bogotá D.C.</p>
+    <p>Los datos mostrados son ficticios. La conexión con sensores físicos, la dosificación de nutrientes y la detección de plagas corresponden a etapas posteriores de implementación.</p>
+  </footer>
+</main>
+
+<script>
+(function () {
+  // ---------- Configuración por especie (umbrales de EJEMPLO; deben ajustarse con apoyo técnico) ----------
+  const SISTEMAS = {
+    suelo: {
+      especies: [
+        { id: "tomate", nombre: "Tomate en suelo (ejemplo)" },
+        { id: "maiz",   nombre: "Maíz en lote (ejemplo)" }
+      ],
+      vars: {
+        humedad:     { label: "Humedad del suelo", unit: "%",   ini: 42, min: 15, max: 75, ok: [30, 60], warn: [25, 70], paso: 1.2, fuente: "Sensor de humedad" },
+        temp_aire:   { label: "Temperatura ambiente", unit: "°C", ini: 24, min: 12, max: 36, ok: [18, 30], warn: [15, 33], paso: 0.4, fuente: "Sensor de temperatura del aire" },
+        caudal:      { label: "Caudal de riego", unit: "L/min", ini: 0, min: 0, max: 4, ok: [0, 4], warn: [0, 4], paso: 0, fuente: "Caudalímetro (sin conectar)", sinUmbral: true }
+      }
+    },
+    hidro: {
+      especies: [
+        { id: "lechuga", nombre: "Lechuga hidropónica (ejemplo)" },
+        { id: "fresa",   nombre: "Fresa en NFT (ejemplo)" }
+      ],
+      vars: {
+        ph:          { label: "pH de la solución", unit: "pH", ini: 6.0, min: 4.5, max: 8.0, ok: [5.5, 6.5], warn: [5.0, 7.0], paso: 0.04, fuente: "Sensor de pH en la solución" },
+        ce:          { label: "Conductividad eléctrica", unit: "mS/cm", ini: 1.6, min: 0.6, max: 3.0, ok: [1.2, 2.0], warn: [1.0, 2.4], paso: 0.03, fuente: "Sensor de CE en la solución" },
+        temp_sol:    { label: "Temperatura de la solución", unit: "°C", ini: 21, min: 14, max: 30, ok: [18, 24], warn: [16, 27], paso: 0.3, fuente: "Sensor de temperatura del agua" },
+        nivel:       { label: "Nivel del depósito", unit: "%", ini: 72, min: 0, max: 100, ok: [30, 100], warn: [15, 100], paso: 0.5, fuente: "Sensor de nivel en tanque" }
+      }
+    }
+  };
+  const PRIO = { critico: { txt: "Crítico", c: "var(--critical)", light: false }, advertencia: { txt: "Advertencia", c: "var(--warning)", light: true }, normal: { txt: "Normal", c: "var(--good)", light: false } };
+  const ESTADO = { normal: { txt: "Normal", c: "var(--good)" }, advertencia: { txt: "Advertencia", c: "var(--warning)" }, critico: { txt: "Crítico", c: "var(--critical)" } };
+  const LITROS_POR_MIN_RIEGO = 2;   // consumo simulado
+  const MAX_RIEGO_S = 20;           // tiempo máximo de riego (demo)
+
+  // ---------- Estado ----------
+  const S = {
+    sistema: "suelo", especie: "tomate", modo: "monitoreo", variable: null, rango: "dia", frecuencia: "semanal",
+    valores: {}, historia: {}, alertas: [], riegos: [], riego: { activo: false, seg: 0, litros: 0 }, ultimaLectura: null,
+    estadoPrev: {}, confirmo: false
+  };
+  let rng = mulberry(42);
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  const $ = (id) => document.getElementById(id);
+  const fmt = (v, d = 1) => Number(v).toFixed(d).replace(".", ",");
+  const DEC = { "pH": 1, "mS/cm": 2, "%": 0, "°C": 1, "L/min": 1 };
+  const decimales = (k) => DEC[SISTEMAS[S.sistema].vars[k].unit] ?? 1;
+  const vars = () => SISTEMAS[S.sistema].vars;
+  const esValorSimulado = true;
+
+  function estadoDe(k, v) {
+    const c = vars()[k];
+    if (c.sinUmbral) return "normal";
+    if (v >= c.ok[0] && v <= c.ok[1]) return "normal";
+    if (v >= c.warn[0] && v <= c.warn[1]) return "advertencia";
+    return "critico";
+  }
+  function accionSugerida(k, est, v) {
+    const c = vars()[k];
+    if (k === "humedad") return v < c.ok[0] ? "Revisar riego o activar regla automática (si el hardware lo permite)." : "Reducir riego y revisar drenaje.";
+    if (k === "nivel") return "Rellenar el depósito antes de la próxima ventana de riego.";
+    if (k === "ph") return v < c.ok[0] ? "Verificar dosificación ácida; confirmar con medición manual." : "Verificar dosificación básica; confirmar con medición manual.";
+    if (k === "ce") return v < c.ok[0] ? "Revisar concentración de nutrientes (posible dilución)." : "Revisar concentración de nutrientes (posible exceso de sales).";
+    if (k === "temp_sol" || k === "temp_aire") return v > c.ok[1] ? "Mejorar ventilación o sombra; revisar temperatura del agua." : "Verificar protección contra frío.";
+    return "Revisar el sensor y el cultivo.";
+  }
+
+  // ---------- Historia simulada ----------
+  function generarHistoria(k, n) {
+    const c = vars()[k], arr = [];
+    let v = c.ini;
+    for (let i = 0; i < n; i++) {
+      v += (rng() - 0.5) * c.paso * 3;
+      if (k === "humedad") v -= 0.25;   // secado progresivo
+      v = Math.min(c.max, Math.max(c.min, v));
+      arr.push(v);
+    }
+    return arr;
+  }
+  function reiniciarDatos() {
+    rng = mulberry(42);
+    const c = vars();
+    S.valores = {}; S.historia = {}; S.alertas = []; S.riegos = []; S.riego = { activo: false, seg: 0, litros: 0 };
+    S.estadoPrev = {};
+    Object.keys(c).forEach((k) => {
+      S.valores[k] = c[k].ini;
+      S.historia[k] = { dia: generarHistoria(k, 24), semana: generarHistoria(k, 7 * 4), mes: generarHistoria(k, 30) };
+      S.estadoPrev[k] = "normal";
+    });
+    S.ultimaLectura = new Date();
+    evaluar();
+  }
+
+  // ---------- Evaluación, alertas y riego ----------
+  function evaluar() {
+    Object.keys(vars()).forEach((k) => {
+      const est = estadoDe(k, S.valores[k]);
+      if (est !== "normal" && est !== S.estadoPrev[k]) {
+        S.alertas.unshift({ fecha: new Date(), var: vars()[k].label, lectura: `${fmt(S.valores[k], decimales(k))} ${vars()[k].unit}`, prio: est === "critico" ? "critico" : "advertencia", accion: accionSugerida(k, est, S.valores[k]), simulado: true });
+        S.alertas = S.alertas.slice(0, 12);
+      }
+      S.estadoPrev[k] = est;
+    });
+  }
+  function iniciarRiego(motivo) {
+    if (S.sistema !== "suelo" || S.riego.activo) return;
+    S.riego = { activo: true, seg: 0, litros: 0, motivo };
+    S.riegos.unshift({ fecha: new Date(), motivo, dur: 0, litros: 0, estado: "En curso" });
+    S.riegos = S.riegos.slice(0, 10);
+  }
+  function detenerRiego(causa) {
+    if (!S.riego.activo) return;
+    S.riego.activo = false;
+    const r = S.riegos[0];
+    if (r) { r.dur = S.riego.seg; r.litros = S.riego.seg / 60 * LITROS_POR_MIN_RIEGO; r.estado = causa; }
+    S.riego.seg = 0;
+  }
+
+  // Tick de simulación: cada 3 s
+  function tick() {
+    const c = vars();
+    Object.keys(c).forEach((k) => {
+      if (c[k].sinUmbral) return;
+      let v = S.valores[k] + (rng() - 0.5) * c[k].paso * 2;
+      if (k === "humedad" && S.riego.activo) v += 1.6;
+      if (k === "humedad" && !S.riego.activo) v -= 0.15;
+      S.valores[k] = Math.min(c[k].max, Math.max(c[k].min, v));
+    });
+    if (S.sistema === "suelo") {
+      S.valores.caudal = S.riego.activo ? 2.1 : 0;
+      if (S.riego.activo) {
+        S.riego.seg += 3;
+        if (S.riego.seg >= MAX_RIEGO_S) detenerRiego("Completado (tiempo máximo)");
+        else if (S.valores.humedad >= 55) detenerRiego("Completado (umbral alcanzado)");
+      }
+      if (S.modo === "auto" && !S.riego.activo && S.valores.humedad < 25) iniciarRiego("Automático: humedad baja");
+    }
+    Object.keys(c).forEach((k) => { const h = S.historia[k]; if (h) { ["dia", "semana", "mes"].forEach((r) => { const max = r === "dia" ? 24 : r === "semana" ? 28 : 30; h[r].push(S.valores[k]); if (h[r].length > max) h[r].shift(); }); } });
+    S.ultimaLectura = new Date();
+    evaluar();
+    renderizar();
+  }
+
+  // ---------- Render ----------
+  function renderSelectores() {
+    const esp = $("especie");
+    esp.innerHTML = SISTEMAS[S.sistema].especies.map((e) => `<option value="${e.id}">${e.nombre}</option>`).join("");
+    esp.value = S.especie = SISTEMAS[S.sistema].especies[0].id;
+    const vsel = $("variable");
+    vsel.innerHTML = Object.keys(vars()).filter((k) => !vars()[k].sinUmbral).map((k) => `<option value="${k}">${vars()[k].label}</option>`).join("");
+    if (!vars()[S.variable]) S.variable = Object.keys(vars())[0];
+    vsel.value = S.variable;
+    document.querySelectorAll("#sistema button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.val === S.sistema)));
+    document.querySelectorAll("#rango button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.val === S.rango)));
+  }
+
+  function renderSensores() {
+    const cont = $("sensors");
+    cont.innerHTML = Object.keys(vars()).map((k) => {
+      const c = vars()[k];
+      if (c.sinUmbral) return "";
+      const est = estadoDe(k, S.valores[k]);
+      const e = ESTADO[est];
+      const rango = `Rango normal: ${fmt(c.ok[0], decimales(k))} – ${fmt(c.ok[1], decimales(k))} ${c.unit}`;
+      return `<article class="card sensor" style="--st:${e.c}">
+        <div class="label">${c.label}<span class="badge-tag">SIMULADO</span></div>
+        <div class="value">${fmt(S.valores[k], decimales(k))}<span class="unit">${c.unit}</span></div>
+        <div class="meta">${rango}</div>
+        <div class="meta">${c.fuente}</div>
+        <span class="status" style="--st:${e.c}"><span class="dot"></span>${e.txt}</span>
+      </article>`;
+    }).join("");
+    const estados = Object.keys(vars()).filter((k) => !vars()[k].sinUmbral).map((k) => estadoDe(k, S.valores[k]));
+    const peor = estados.includes("critico") ? "critico" : estados.includes("advertencia") ? "advertencia" : "normal";
+    $("overallDot").style.setProperty("--st", ESTADO[peor].c);
+    $("overallDot").style.background = ESTADO[peor].c;
+    $("overallText").textContent = ESTADO[peor].txt;
+    $("lastRead").textContent = "Última lectura: " + S.ultimaLectura.toLocaleString("es-CO", { dateStyle: "short", timeStyle: "medium" }) + " (simulada)";
+  }
+
+  function renderGrafica() {
+    const k = S.variable, c = vars()[k], svg = $("chart");
+    if (!k || !c) { svg.innerHTML = ""; return; }
+    const datos = S.historia[k] ? S.historia[k][S.rango] : [];
+    const W = 720, H = 300, pad = { l: 52, r: 16, t: 14, b: 32 };
+    const yMin = c.min, yMax = c.max;
+    const x = (i) => pad.l + i * (W - pad.l - pad.r) / Math.max(1, datos.length - 1);
+    const y = (v) => pad.t + (1 - (v - yMin) / (yMax - yMin)) * (H - pad.t - pad.b);
+    const pts = datos.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    const area = datos.length ? `${pad.l},${H - pad.b} ${pts} ${x(datos.length - 1).toFixed(1)},${H - pad.b}` : "";
+    const yWarnLo = c.warn[0], yWarnHi = c.warn[1];
+    let grid = "";
+    for (let i = 0; i <= 4; i++) {
+      const v = yMin + (yMax - yMin) * i / 4, yy = y(v).toFixed(1);
+      grid += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${yy}" y2="${yy}" stroke="#dfe2d6" stroke-width="1"/>`;
+      grid += `<text x="${pad.l - 8}" y="${yy}" text-anchor="end" dominant-baseline="middle">${fmt(v, decimales(k))}</text>`;
+    }
+    const etiquetas = S.rango === "dia" ? "Hace 24 h → ahora" : S.rango === "semana" ? "Últimas 4 semanas (medias diarias simuladas)" : "Últimos 30 días (simulados)";
+    const marcas = datos.map((v, i) => `<rect x="${(x(i) - 10).toFixed(1)}" y="${pad.t}" width="20" height="${H - pad.t - pad.b}" fill="transparent" data-i="${i}" data-v="${v}"><title>${fmt(v, decimales(k))} ${c.unit}</title></rect>`).join("");
+    svg.innerHTML = `
+      <defs><linearGradient id="gA" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#00A4B5" stop-opacity=".22"/><stop offset="1" stop-color="#00A4B5" stop-opacity="0"/></linearGradient></defs>
+      <rect x="${pad.l}" y="${y(yWarnHi)}" width="${W - pad.l - pad.r}" height="${Math.max(0, y(yWarnLo) - y(yWarnHi))}" fill="#fff3c4" opacity=".55"/>
+      ${grid}
+      <polygon points="${area}" fill="url(#gA)"/>
+      <polyline points="${pts}" fill="none" stroke="#00A4B5" stroke-width="2.25" stroke-linejoin="round" stroke-linecap="round"/>
+      ${datos.length ? `<circle cx="${x(datos.length - 1).toFixed(1)}" cy="${y(datos[datos.length - 1]).toFixed(1)}" r="5" fill="#00A4B5" stroke="#fff" stroke-width="2"/>` : ""}
+      <text x="${pad.l}" y="${H - 8}">${etiquetas}</text>
+      ${marcas}`;
+    svg.querySelectorAll("rect[data-i]").forEach((r) => {
+      r.addEventListener("mouseenter", () => { $("tip").textContent = `${etiquetas.split(" ")[0] === "Hace" ? "Lectura" : "Punto"} ${Number(r.dataset.i) + 1} de ${datos.length}: ${fmt(Number(r.dataset.v), decimales(k))} ${c.unit} (simulado)`; });
+    });
+    $("lgLine").textContent = `${c.label} (simulado)`;
+    $("tablaDatos").innerHTML = `<tr><th>Punto</th><th class="num">Valor (${c.unit})</th></tr>` + datos.map((v, i) => `<tr><td>${i + 1}</td><td class="num">${fmt(v, decimales(k))}</td></tr>`).join("");
+  }
+
+  function renderRiego() {
+    const r = S.riego, activo = r.activo;
+    $("pumpDot").style.background = activo ? "var(--series-1)" : "var(--muted)";
+    $("pumpText").textContent = activo ? "Bomba encendida (simulado)" : "Bomba apagada";
+    $("pumpInfo").textContent = S.sistema === "hidro"
+      ? "En hidroponía el riego/circulación depende del sistema; el pH y la CE no activan la bomba por sí solos."
+      : (activo ? `Tiempo de riego: ${r.seg} s de ${MAX_RIEGO_S} s máximo. Litros estimados: ${fmt(r.seg / 60 * LITROS_POR_MIN_RIEGO, 1)} L.` : "Lista para iniciar riego según el modo seleccionado.");
+    $("pumpBar").style.width = activo ? Math.min(100, r.seg / MAX_RIEGO_S * 100) + "%" : "0%";
+
+    const box = $("manualBox");
+    if (S.sistema === "hidro") {
+      box.innerHTML = `<p class="muted">El control de riego por bomba aplica al cultivo en suelo en esta demostración.</p>`;
+    } else if (S.modo === "monitoreo") {
+      box.innerHTML = `<p class="muted">Modo monitoreo: el riego está deshabilitado.</p>`;
+    } else if (S.modo === "manual") {
+      box.innerHTML = `
+        <label class="check"><input type="checkbox" id="chkConfirm" ${S.confirmo ? "checked" : ""}> Confirmo verificación de hardware, pruebas y medidas de seguridad.</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" type="button" id="btnRiego" ${!S.confirmo ? "disabled" : ""}>${activo ? "Detener riego" : "Iniciar riego manual"}</button>
+          <button class="btn alt" type="button" id="btnParo" ${!activo ? "disabled" : ""}>Parada de emergencia</button>
+        </div>`;
+    } else {
+      box.innerHTML = `
+        <p class="muted">Modo automático: se activa cuando la humedad cae por debajo de 25 %. Requiere confirmación de hardware en la etapa real.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn alt" type="button" id="btnParo" ${!activo ? "disabled" : ""}>Parada de emergencia</button>
+        </div>`;
+    }
+    const chk = $("chkConfirm");
+    if (chk) chk.addEventListener("change", (e) => { S.confirmo = e.target.checked; renderRiego(); });
+    const bR = $("btnRiego");
+    if (bR) bR.addEventListener("click", () => { if (S.riego.activo) detenerRiego("Detenido manualmente"); else iniciarRiego("Manual asistido"); renderizar(); });
+    const bP = $("btnParo");
+    if (bP) bP.addEventListener("click", () => { detenerRiego("Parada de emergencia"); renderizar(); });
+
+    $("tablaRiego").innerHTML = `<tr><th>Fecha</th><th>Origen</th><th class="num">Duración</th><th class="num">Litros</th><th>Estado</th></tr>` +
+      (S.riegos.length ? S.riegos.map((e) => `<tr><td>${e.fecha.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</td><td>${e.motivo}</td><td class="num">${e.dur ? e.dur + " s" : "—"}</td><td class="num">${e.litros ? fmt(e.litros, 1) : "—"}</td><td>${e.estado}</td></tr>`).join("") : `<tr><td colspan="5" class="empty">Sin eventos registrados.</td></tr>`);
+  }
+
+  function renderAlertas() {
+    const filas = S.alertas.map((a) => {
+      const p = PRIO[a.prio];
+      return `<tr><td>${a.fecha.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</td><td>${a.var}</td><td class="num">${a.lectura}</td><td><span class="prio ${p.light ? "light" : ""}" style="--st:${p.c}">${p.txt}</span></td><td>${a.accion}</td></tr>`;
+    }).join("");
+    $("tablaAlertas").innerHTML = `<tr><th>Hora</th><th>Variable</th><th class="num">Lectura</th><th>Prioridad</th><th>Acción sugerida</th></tr>` +
+      (filas || `<tr><td colspan="5" class="empty">No hay alertas activas. Todas las variables están en rango normal.</td></tr>`);
+  }
+
+  function renderReporte() {
+    const dias = { diario: 1, semanal: 7, quincenal: 15, mensual: 30 }[S.frecuencia];
+    const k = Object.keys(vars()).filter((x) => !vars()[x].sinUmbral);
+    const filas = k.map((x) => {
+      const serie = (S.historia[x] ? S.historia[x].mes : []).slice(-Math.min(dias, 30));
+      const prom = serie.reduce((a, b) => a + b, 0) / Math.max(1, serie.length);
+      const min = Math.min(...serie), max = Math.max(...serie);
+      return `<tr><td>${vars()[x].label}</td><td class="num">${fmt(prom, decimales(x))}</td><td class="num">${fmt(min, decimales(x))}</td><td class="num">${fmt(max, decimales(x))}</td><td>${vars()[x].unit}</td></tr>`;
+    }).join("");
+    const nRiego = S.riegos.length;
+    const litros = S.riegos.reduce((a, e) => a + (e.litros || 0), 0) + (S.riego.activo ? S.riego.seg / 60 * LITROS_POR_MIN_RIEGO : 0);
+    const alertasCount = S.alertas.length;
+    $("resumen").innerHTML = `
+      <div class="card"><div class="label muted">Periodo</div><div style="font-size:20px;font-weight:800">${S.frecuencia.charAt(0).toUpperCase() + S.frecuencia.slice(1)}</div><div class="meta muted">Ventana de ${dias} día(s) simulados</div></div>
+      <div class="card"><div class="muted">Eventos de riego</div><div style="font-size:24px;font-weight:800">${nRiego}</div><div class="muted">Registrados (simulado)</div></div>
+      <div class="card"><div class="muted">Agua consumida</div><div style="font-size:24px;font-weight:800">${fmt(litros, 1)} L</div><div class="muted">Estimado (simulado)</div></div>
+      <div class="card"><div class="muted">Alertas</div><div style="font-size:24px;font-weight:800">${alertasCount}</div><div class="muted">En el periodo (simulado)</div></div>
+      <div class="card"><div class="muted">Nutrientes dosificados</div><div style="font-size:24px;font-weight:800">1,2 L</div><div class="muted">Dato de ejemplo</div></div>`;
+    $("tablaReporte").innerHTML = `<tr><th>Variable</th><th class="num">Promedio</th><th class="num">Mínimo</th><th class="num">Máximo</th><th>Unidad</th></tr>` + filas;
+  }
+
+  function renderizar() {
+    renderSensores();
+    renderGrafica();
+    renderRiego();
+    renderAlertas();
+    renderReporte();
+  }
+
+  // ---------- Eventos ----------
+  document.querySelectorAll("#sistema button").forEach((b) => b.addEventListener("click", () => {
+    S.sistema = b.dataset.val; S.variable = null; S.confirmo = false;
+    renderSelectores(); reiniciarDatos(); renderizar();
+  }));
+  document.querySelectorAll("#rango button").forEach((b) => b.addEventListener("click", () => {
+    S.rango = b.dataset.val; renderSelectores(); renderGrafica();
+  }));
+  $("especie").addEventListener("change", (e) => { S.especie = e.target.value; });
+  $("modo").addEventListener("change", (e) => { S.modo = e.target.value; S.confirmo = false; renderRiego(); });
+  $("variable").addEventListener("change", (e) => { S.variable = e.target.value; renderGrafica(); });
+  $("frecuencia").addEventListener("change", (e) => { S.frecuencia = e.target.value; renderReporte(); });
+  $("btnFalla").addEventListener("click", () => {
+    if (S.sistema === "suelo") S.valores.humedad = 18; else S.valores.ph = 7.4;
+    S.historia[S.sistema === "suelo" ? "humedad" : "ph"].dia.push(S.valores.humedad ?? S.valores.ph);
+    evaluar(); renderizar();
+  });
+  $("btnReset").addEventListener("click", () => { reiniciarDatos(); renderizar(); });
+
+  // ---------- Inicio ----------
+  S.variable = "humedad";
+  renderSelectores();
+  reiniciarDatos();
+  renderSelectores();
+  renderizar();
+  setInterval(tick, 3000);
+})();
+</script>
+</body>
+</html>
