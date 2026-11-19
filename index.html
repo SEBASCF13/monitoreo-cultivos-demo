@@ -112,15 +112,34 @@
   .tw { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
   .tw table { min-width: 460px; }
   @media (max-width: 720px) {
+    .tw { overflow: visible; }
+    .tw table.resp-ok, .tw table { min-width: 0; }
+    table thead, table tr:has(> th) { display: none; }
+    table, tbody { display: block; width: 100%; }
+    table tr { display: block; border-bottom: 1px solid var(--line); padding: 8px 0; }
+    table tr:last-child { border-bottom: 0; }
+    table td { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 0; padding: 3px 0; text-align: right; font-size: 13.5px; }
+    table td::before { content: attr(data-label); font-weight: 600; color: var(--text-2); text-align: left; flex: 0 0 auto; max-width: 45%; }
+    table td:not([data-label]):not([colspan]) { justify-content: flex-end; }
+    table td[colspan] { display: block; text-align: left; }
+    table td.num { text-align: right; }
+    table td[data-label=""]::before { content: none; }
+    table td[data-label=""] { justify-content: flex-start; text-align: left; font-weight: 700; color: var(--brand-dark); font-size: 14.5px; padding-bottom: 6px; }
+  }
+  .header-tag { display: none; }
+  @media (max-width: 720px) {
     .wrap { padding: 0 12px; }
     .top .wrap { flex-direction: column; align-items: flex-start; gap: 10px; padding-top: 12px; padding-bottom: 12px; }
-    .brand { gap: 10px; flex-direction: column; align-items: flex-start; width: 100%; min-width: 0; }
-    .brand img { height: 40px; width: auto; max-width: 100%; }
-    .brand .fallback { font-size: 18px; }
+    .top .wrap { width: 100%; box-sizing: border-box; padding: 10px 12px !important; gap: 6px !important; }
+    .brand { gap: 8px; flex-direction: column; align-items: flex-start; width: 100%; min-width: 0; }
+    .brand img { height: 30px; width: auto; max-width: 100%; }
+    .brand .fallback { font-size: 16px; }
     .brand-text { min-width: 0; width: 100%; }
-    .brand-text h1 { font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
-    .brand-text p { font-size: 12px; }
-    .top .wrap { width: 100%; box-sizing: border-box; }
+    .brand-text h1 { font-size: 15px; line-height: 1.25; overflow-wrap: anywhere; }
+    .brand-text p { font-size: 11.5px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .pill-sim { font-size: 10px; }
+    .groups { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 11.5px; text-align: left; width: 100%; }
+    .groups > div { white-space: nowrap; }
     .groups { text-align: left; font-size: 12px; }
     .toolbar { flex-direction: column; align-items: stretch; gap: 10px; margin: 12px 0; }
     .field { min-width: 0; width: 100%; }
@@ -590,6 +609,23 @@
     renderRiego();
     renderAlertas();
     renderReporte();
+    etiquetarTablas();
+  }
+
+  // Etiqueta cada celda con el encabezado de su columna (para ver las tablas como tarjetas en celular)
+  function etiquetarTablas() {
+    document.querySelectorAll("table").forEach((t) => {
+      const heads = Array.from(t.querySelectorAll("thead th, tr:first-child th")).map((h) => h.textContent.trim());
+      t.querySelectorAll("tr").forEach((tr) => {
+        Array.from(tr.children).forEach((td, i) => {
+          if (td.tagName === "TD") {
+            if (heads[i] === "Variable") td.setAttribute("data-label", "");
+            else if (heads[i]) td.setAttribute("data-label", heads[i]);
+            if (td.colSpan > 1) td.setAttribute("data-label", "");
+          }
+        });
+      });
+    });
   }
 
   // ---------- Eventos ----------
