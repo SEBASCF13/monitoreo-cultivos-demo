@@ -13,18 +13,21 @@
   #qrWrap { position: relative; width: 260px; height: 260px; margin: 18px auto; }
   #qr { width: 260px; height: 260px; }
   #qr img, #qr canvas { display: block; margin: 0 auto; }
-  #logo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #fff; padding: 6px 10px; border-radius: 8px; width: 96px; height: auto; }
+  #logo { display: block; height: 56px; width: auto; margin: 0 0 14px 0; }
+  .card { text-align: left; }
+  .card h1, .card p { text-align: left; }
+  #qrWrap { margin: 18px auto; }
   .url { font-size: 12px; word-break: break-all; color: #00A4B5; font-weight: 600; }
   .pill { display: inline-block; background: #FFCE00; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-top: 8px; }
 </style>
 </head>
 <body>
 <main class="card">
+  <img id="logo" src="https://www.uamerica.edu.co/wp-content/uploads/2026/11/universidad-de-america-logo.webp" alt="Logo Universidad de América">
   <h1>Monitoreo inteligente de cultivos</h1>
   <p>Semillero de investigación BioSide · Grupo de investigación GPS</p>
   <div id="qrWrap">
     <div id="qr" role="img" aria-label="Código QR con el enlace a la demostración"></div>
-    <img id="logo" src="https://www.uamerica.edu.co/wp-content/uploads/2026/11/universidad-de-america-logo.webp" alt="Logo Universidad de América">
   </div>
   <p>Escanee el código para abrir la demostración.</p>
   <p class="url" id="enlace"></p>
