@@ -163,11 +163,34 @@
     .check { font-size: 14px; }
     .notice { font-size: 12.5px; }
     svg.chart text { font-size: 12px; }
-  }
     .layout { grid-template-columns: minmax(0, 1fr); }
     .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .card, .layout > *, .grid > * { min-width: 0; }
-    .tw { width: 100%; }
+    .tw { width: 100%; overflow: visible; }
+
+    /* Encabezado compacto para celular */
+    .solo-escritorio { display: none; }
+    .top .wrap { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; padding-bottom: 10px; }
+    .brand { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .brand img { height: 30px; }
+    .brand-text h1 { font-size: 15px; font-weight: 800; }
+    .brand-text p { margin-top: 2px; }
+    .pill-sim { font-size: 10px; }
+    .groups { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 11.5px; text-align: left; }
+
+    /* Tablas convertidas en tarjetas */
+    .tw table, .tw tbody { display: block; width: 100%; min-width: 0; }
+    .tw tr { display: block; }
+    .tw tr:not(.tcab) { border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; background: #fff; }
+    .tw tr.tcab { display: none; }
+    .tw td { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; border: 0; padding: 5px 0; text-align: right; font-size: 13px; }
+    .tw td::before { content: attr(data-label); font-weight: 600; color: var(--text-2); text-align: left; flex-shrink: 0; }
+    .tw td[colspan] { display: block; text-align: left; }
+    .tw td[colspan]::before { display: none; }
+    .tw td.num { text-align: right; }
+    .tw tr.tcab { display: none; }
+    .tw td.largo { display: block; text-align: left; }
+    .tw td.largo::before { display: none; }
   }
   @media (max-width: 380px) {
     .grid { grid-template-columns: minmax(0, 1fr); }
@@ -186,7 +209,7 @@
       <span class="fallback">Universidad de América</span>
       <div class="brand-text">
         <h1>Plataforma de monitoreo inteligente de cultivos</h1>
-        <p>Demostración del prototipo · <span class="pill-sim">DATOS SIMULADOS</span></p>
+        <p><span class="solo-escritorio">Demostración del prototipo · </span><span class="pill-sim">DATOS SIMULADOS</span></p>
       </div>
     </div>
     <div class="groups">
@@ -615,16 +638,19 @@
   // Etiqueta cada celda con el encabezado de su columna (para ver las tablas como tarjetas en celular)
   function etiquetarTablas() {
     document.querySelectorAll("table").forEach((t) => {
-      const heads = Array.from(t.querySelectorAll("thead th, tr:first-child th")).map((h) => h.textContent.trim());
-      t.querySelectorAll("tr").forEach((tr) => {
-        Array.from(tr.children).forEach((td, i) => {
-          if (td.tagName === "TD") {
-            if (heads[i] === "Variable") td.setAttribute("data-label", "");
-            else if (heads[i]) td.setAttribute("data-label", heads[i]);
-            if (td.colSpan > 1) td.setAttribute("data-label", "");
-          }
+      const filas = t.querySelectorAll("tr");
+      if (!filas.length) return;
+      const cab = filas[0].querySelectorAll("th");
+      if (!cab.length) return;
+      filas[0].classList.add("tcab");
+      const etiquetas = Array.from(cab).map((th) => th.textContent.trim());
+      for (let i = 1; i < filas.length; i++) {
+        Array.from(filas[i].children).forEach((td, j) => {
+          if (td.hasAttribute("colspan")) return;
+          td.setAttribute("data-label", etiquetas[j] || "");
+          td.classList.toggle("largo", td.textContent.trim().length > 40);
         });
-      });
+      }
     });
   }
 
