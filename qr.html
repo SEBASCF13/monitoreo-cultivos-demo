@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Código QR · Monitoreo inteligente de cultivos</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  body { margin: 0; font-family: "Montserrat", system-ui, sans-serif; background: #f4f5f0; color: #1A2403; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; }
+  .card { background: #fff; border: 1px solid #dfe2d6; border-top: 4px solid #C8FF01; border-radius: 14px; padding: 28px; text-align: center; max-width: 420px; width: 100%; }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 800; }
+  p { margin: 4px 0; font-size: 13px; color: #4a4f3a; }
+  #qrWrap { position: relative; width: 260px; height: 260px; margin: 18px auto; }
+  #qr { width: 260px; height: 260px; }
+  #qr img, #qr canvas { display: block; margin: 0 auto; }
+  #logo { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: #fff; padding: 6px 10px; border-radius: 8px; width: 96px; height: auto; }
+  .url { font-size: 12px; word-break: break-all; color: #00A4B5; font-weight: 600; }
+  .pill { display: inline-block; background: #FFCE00; font-weight: 700; font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>Monitoreo inteligente de cultivos</h1>
+  <p>Semillero de investigación BioSide · Grupo de investigación GPS</p>
+  <div id="qrWrap">
+    <div id="qr" role="img" aria-label="Código QR con el enlace a la demostración"></div>
+    <img id="logo" src="https://www.uamerica.edu.co/wp-content/uploads/2026/11/universidad-de-america-logo.webp" alt="Logo Universidad de América">
+  </div>
+  <p>Escanee el código para abrir la demostración.</p>
+  <p class="url" id="enlace"></p>
+  <span class="pill">DATOS SIMULADOS</span>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+  var URL_DEMO = "https://sebascf13.github.io/monitoreo-cultivos-demo/";
+  document.getElementById("enlace").textContent = URL_DEMO;
+  new QRCode(document.getElementById("qr"), { text: URL_DEMO, width: 260, height: 260, colorDark: "#1A2403", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H });
+</script>
+</body>
+</html>
