@@ -263,6 +263,13 @@
     <div class="tw"><table id="tablaReal"></table></div>
   </section>
 
+  <!-- 1b. Vasos con medición real -->
+  <section class="section card" aria-labelledby="t-ilusreal">
+    <h2 id="t-ilusreal" style="margin:0 0 4px;font-size:16px;color:var(--brand-dark)">Vasos con medición real <span class="badge-real">REAL</span></h2>
+    <p class="muted" style="margin:0 0 8px">Largo de la raíz de la última medición de cada vaso, a la misma escala del montaje simulado. Solo se dibuja la raíz medida; los vasos sin medir aparecen como pendientes.</p>
+    <div class="ilus-wrap"><svg id="ilustracionReal" class="ilus" viewBox="0 0 980 310" role="img" aria-label="Vasos con la raíz medida en el laboratorio; los vasos sin medir aparecen como pendientes"></svg></div>
+  </section>
+
   <!-- 2. Simulación: indicadores -->
   <section class="section" aria-labelledby="t-sim">
     <h2 id="t-sim" style="margin:0 0 10px;font-size:16px;color:var(--brand-dark)">Simulación automática <span class="badge-sim">SIMULADO</span></h2>
@@ -474,6 +481,33 @@
     }).join("");
   }
 
+  function renderIlustracionReal() {
+    const TOP = 40, BASE = 250, SUELO = 182, GW = 74;
+    const C = { control: "#6b6f5c", bio: "#00A4B5" };
+    const N = { control: "Control", bio: "Bioestimulante" };
+    let svg = "";
+    S.vasos.forEach((x) => {
+      const i = x.v - 1;
+      const cx = 70 + i * 120;
+      const izq = cx - GW / 2, der = cx + GW / 2;
+      const u = ultima(x.v);
+      const mm = u && u.raiz_mm != null ? u.raiz_mm : null;
+      svg += `<path d="M${izq} ${TOP} V ${BASE - 14} Q ${izq} ${BASE} ${izq + 14} ${BASE} H ${der - 14} Q ${der} ${BASE} ${der} ${BASE - 14} V ${TOP} Z" fill="#f3f8f8" stroke="${C[x.grupo]}" stroke-width="2.5"/>`;
+      svg += `<rect x="${izq + 2}" y="${SUELO}" width="${GW - 4}" height="${BASE - SUELO - 3}" fill="#8a6a45" opacity=".85"/>`;
+      if (mm !== null) {
+        const largo = Math.min(66, mm * 0.9);
+        svg += `<path d="M${cx} ${SUELO} Q ${cx + 4} ${SUELO + largo / 2} ${cx + 1} ${SUELO + largo}" fill="none" stroke="#7a5a3a" stroke-width="2.2" stroke-linecap="round"/>`;
+        svg += `<ellipse cx="${cx}" cy="${SUELO + 2}" rx="5" ry="3.5" fill="#d9c08f" stroke="#b59a63"/>`;
+      } else {
+        svg += `<text x="${cx}" y="${(TOP + SUELO) / 2}" text-anchor="middle" font-size="12" fill="#6b6f5c">Pendiente</text>`;
+      }
+      svg += `<text x="${cx}" y="${BASE + 22}" text-anchor="middle" font-size="13" font-weight="700" fill="#1A2403">Vaso ${x.v}</text>`;
+      svg += `<text x="${cx}" y="${BASE + 38}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${C[x.grupo]}">${N[x.grupo]}</text>`;
+      svg += `<text x="${cx}" y="${BASE + 54}" text-anchor="middle" font-size="11" fill="#6b6f5c">${mm !== null ? fmt(mm, 2) + " mm" + (u.fecha ? " · " + u.fecha : " · sin fecha") : "Sin medición"}</text>`;
+    });
+    $("ilustracionReal").innerHTML = svg;
+  }
+
   function renderIlustracion() {
     const d = S.dia;
     const C = { control: "#6b6f5c", bio: "#00A4B5" };
@@ -600,6 +634,7 @@
     renderSensores();
     renderVasos();
     renderIlustracion();
+    renderIlustracionReal();
     renderGrafica();
     renderAlertas();
     renderRiego();
