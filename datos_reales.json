@@ -1,0 +1,11 @@
+{
+  "ensayo": "Bioensayo de frijol común (Phaseolus vulgaris) con bioestimulante de microalgas",
+  "instrucciones": "Agregue una entrada dentro de 'mediciones' por cada medición. 'fecha': AAAA-MM-DD (o null si no se conoce). 'vaso': número del 1 al 8. 'raiz_mm': largo de la raíz en milímetros (o null). 'germinadas': número de semillas germinadas de 0 a 2 (o null). 'observacion': texto libre. Vasos 1 a 3: control sin bioestimulante. Vasos 4 a 8: con bioestimulante.",
+  "mediciones": [
+    { "fecha": null, "vaso": 3, "raiz_mm": 33.83, "germinadas": null, "observacion": "Control. Fecha por confirmar." },
+    { "fecha": null, "vaso": 4, "raiz_mm": 17.70, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." },
+    { "fecha": null, "vaso": 5, "raiz_mm": 63.09, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." },
+    { "fecha": null, "vaso": 6, "raiz_mm": 33.85, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." },
+    { "fecha": null, "vaso": 7, "raiz_mm": 33.85, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." }
+  ]
+}

@@ -207,6 +207,8 @@
   .counts { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0 10px; }
   .counts .c { background: #f4f5f0; border-radius: 10px; padding: 8px 12px; font-size: 13px; }
   .counts .c strong { font-size: 18px; color: var(--brand-dark); display: block; }
+  .ilus-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+  .ilus { display: block; width: 100%; min-width: 640px; height: auto; }
 </style>
 </head>
 <body>
@@ -256,7 +258,7 @@
   <!-- 1. Medición real -->
   <section class="section card" aria-labelledby="t-real">
     <h2 id="t-real" style="margin:0 0 4px;font-size:16px;color:var(--brand-dark)">Medición real del laboratorio <span class="badge-real">REAL</span></h2>
-    <p class="muted" style="margin:0 0 6px">Longitud de raíz medida en mm. Las mediciones continúan; por ahora son preliminares.</p>
+    <p class="muted" style="margin:0 0 6px">Se muestra la última medición de cada vaso, tomada de datos_reales.json. Para agregar una medición, se edita ese archivo y se sube al repositorio.</p>
     <div class="counts" id="conteoReal"></div>
     <div class="tw"><table id="tablaReal"></table></div>
   </section>
@@ -265,6 +267,13 @@
   <section class="section" aria-labelledby="t-sim">
     <h2 id="t-sim" style="margin:0 0 10px;font-size:16px;color:var(--brand-dark)">Simulación automática <span class="badge-sim">SIMULADO</span></h2>
     <div class="grid" id="sensores"></div>
+  </section>
+
+  <!-- 2b. Ilustración del montaje -->
+  <section class="section card" aria-labelledby="t-ilus">
+    <h2 id="t-ilus" style="margin:0 0 4px;font-size:16px;color:var(--brand-dark)">Montaje del ensayo <span class="badge-sim">SIMULADO</span></h2>
+    <p class="muted" style="margin:0 0 8px">Esquema de los 8 vasos con 2 semillas cada uno. La altura del tallo y el largo de la raíz siguen la simulación del día actual; no son medidas reales.</p>
+    <div class="ilus-wrap"><svg id="ilustracion" class="ilus" viewBox="0 0 980 310" role="img" aria-label="Ilustración de los ocho vasos con plántulas de frijol, datos simulados"></svg></div>
   </section>
 
   <section class="section layout">
@@ -318,7 +327,12 @@
 <script>
 (function () {
   // ---------- Datos reales (medidas de raíz en mm) ----------
-  const REAL = { 3: 33.83, 4: 17.70, 5: 63.09, 6: 33.85, 7: 33.85 };
+  // Medidas reales: se cargan desde datos_reales.json (se edita ese archivo y se sube al repositorio).
+  let MEDICIONES = [];
+  const ultima = (v) => {
+    const xs = MEDICIONES.filter((m) => m.vaso === v);
+    return xs.length ? xs.reduce((a, b) => ((b.fecha || "") >= (a.fecha || "") ? b : a)) : null;
+  };
   const grupoDe = (v) => (v <= 3 ? "control" : "bio");
   const ETIQ = { control: "Sin bioestimulante", bio: "Con bioestimulante" };
   const COLOR = { control: "#6b6f5c", bio: "#00A4B5" };
@@ -355,7 +369,7 @@
         const crece = d >= gdia ? lmax * (1 - Math.exp(-tasa * 0.35 * (d - gdia + 1))) : 0;
         raiz[d] = crece > 0 ? Math.max(0, crece + (rnd() - 0.5) * 2) : 0;
       }
-      return { v, grupo: grupoDe(v), germ, raiz, real: REAL[v] ?? null };
+      return { v, grupo: grupoDe(v), germ, raiz };
     });
   }
 
@@ -403,15 +417,21 @@
 
   // ---------- Render ----------
   function renderReal() {
-    const medidos = S.vasos.filter((x) => x.real !== null);
-    const cCtrl = medidos.filter((x) => x.grupo === "control").length;
-    const cBio = medidos.filter((x) => x.grupo === "bio").length;
+    const vasosCon = (grupo) => new Set(MEDICIONES.filter((m) => grupoDe(m.vaso) === grupo).map((m) => m.vaso)).size;
     $("conteoReal").innerHTML =
-      `<div class="c">Sin bioestimulante<strong>${cCtrl} de 3</strong>raíces medidas</div>` +
-      `<div class="c">Con bioestimulante<strong>${cBio} de 5</strong>raíces medidas</div>`;
+      `<div class="c">Sin bioestimulante<strong>${vasosCon("control")} de 3</strong>vasos con medición</div>` +
+      `<div class="c">Con bioestimulante<strong>${vasosCon("bio")} de 5</strong>vasos con medición</div>` +
+      `<div class="c">Registros cargados<strong>${MEDICIONES.length}</strong>mediciones</div>`;
     $("tablaReal").innerHTML =
-      `<tr><th>Vaso</th><th>Grupo</th><th class="num">Raíz medida (mm)</th></tr>` +
-      S.vasos.map((x) => `<tr><td>Vaso ${x.v}</td><td><span class="chip ${x.grupo === "bio" ? "bio" : ""}">${ETIQ[x.grupo]}</span></td><td class="num">${x.real !== null ? fmt(x.real, 2) : "<span class='muted'>Pendiente</span>"}</td></tr>`).join("");
+      `<tr><th>Vaso</th><th>Grupo</th><th>Fecha</th><th class="num">Raíz (mm)</th><th class="num">Germinadas</th><th>Observación</th></tr>` +
+      S.vasos.map((x) => {
+        const chip = `<span class="chip ${x.grupo === "bio" ? "bio" : ""}">${ETIQ[x.grupo]}</span>`;
+        const m = ultima(x.v);
+        if (!m) return `<tr><td>Vaso ${x.v}</td><td>${chip}</td><td colspan="4" class="muted">Pendiente</td></tr>`;
+        const raiz = m.raiz_mm != null ? fmt(m.raiz_mm, 2) : "—";
+        const germ = m.germinadas != null ? `${m.germinadas} de 2` : "—";
+        return `<tr><td>Vaso ${x.v}</td><td>${chip}</td><td>${m.fecha || "Sin fecha"}</td><td class="num">${raiz}</td><td class="num">${germ}</td><td>${m.observacion || ""}</td></tr>`;
+      }).join("");
   }
 
   function $(id) { return document.getElementById(id); }
@@ -442,7 +462,8 @@
   function renderVasos() {
     $("vasos").innerHTML = S.vasos.map((x) => {
       const hoy = x.germ[S.dia];
-      const real = x.real !== null ? `Real: <strong>${fmt(x.real, 2)} mm</strong>` : "Real: pendiente";
+      const u = ultima(x.v);
+      const real = u && u.raiz_mm != null ? `Real: <strong>${fmt(u.raiz_mm, 2)} mm</strong>${u.fecha ? " · " + u.fecha : ""}` : "Real: pendiente";
       return `<div class="vaso-card">
         <h3>Vaso ${x.v}</h3>
         <span class="chip ${x.grupo === "bio" ? "bio" : ""}">${ETIQ[x.grupo]}</span>
@@ -451,6 +472,44 @@
         <div class="muted" style="margin-top:4px">${real}</div>
       </div>`;
     }).join("");
+  }
+
+  function renderIlustracion() {
+    const d = S.dia;
+    const C = { control: "#6b6f5c", bio: "#00A4B5" };
+    const N = { control: "Control", bio: "Bioestimulante" };
+    const TOP = 40, BASE = 250, SUELO = 182, GW = 74;
+    let svg = "";
+    S.vasos.forEach((x, i) => {
+      const cx = 70 + i * 120;
+      const izq = cx - GW / 2, der = cx + GW / 2;
+      const r = x.raiz[d] || 0;
+      const germ = x.germ[d];
+      const largo = Math.min(60, r * 0.9);
+      const tallo = germ > 0 ? Math.min(90, 12 + r * 1.0) : 0;
+      svg += `<path d="M${izq} ${TOP} V ${BASE - 14} Q ${izq} ${BASE} ${izq + 14} ${BASE} H ${der - 14} Q ${der} ${BASE} ${der} ${BASE - 14} V ${TOP} Z" fill="#f3f8f8" stroke="${C[x.grupo]}" stroke-width="2.5"/>`;
+      svg += `<rect x="${izq + 2}" y="${SUELO}" width="${GW - 4}" height="${BASE - SUELO - 3}" fill="#8a6a45" opacity=".85"/>`;
+      for (let k = 0; k < 2; k++) {
+        const sx = cx + (k === 0 ? -16 : 16);
+        if (k >= germ) {
+          svg += `<ellipse cx="${sx}" cy="${SUELO + 6}" rx="7" ry="4.5" fill="#d9c08f" stroke="#b59a63"/>`;
+          continue;
+        }
+        svg += `<path d="M${sx} ${SUELO} Q ${sx + (k ? 4 : -4)} ${SUELO + largo / 2} ${sx + (k ? 2 : -2)} ${SUELO + largo}" fill="none" stroke="#7a5a3a" stroke-width="1.8" stroke-linecap="round"/>`;
+        if (tallo > 0) {
+          const ty = SUELO - tallo;
+          svg += `<line x1="${sx}" y1="${SUELO}" x2="${sx}" y2="${ty}" stroke="#3f8f2f" stroke-width="3" stroke-linecap="round"/>`;
+          if (tallo > 24) {
+            svg += `<ellipse cx="${sx - 9}" cy="${ty + 4}" rx="9" ry="4.5" fill="#4fa83a" transform="rotate(-25 ${sx - 9} ${ty + 4})"/>`;
+            svg += `<ellipse cx="${sx + 9}" cy="${ty + 4}" rx="9" ry="4.5" fill="#4fa83a" transform="rotate(25 ${sx + 9} ${ty + 4})"/>`;
+          }
+        }
+      }
+      svg += `<text x="${cx}" y="${BASE + 22}" text-anchor="middle" font-size="13" font-weight="700" fill="#1A2403">Vaso ${x.v}</text>`;
+      svg += `<text x="${cx}" y="${BASE + 38}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${C[x.grupo]}">${N[x.grupo]}</text>`;
+      svg += `<text x="${cx}" y="${BASE + 54}" text-anchor="middle" font-size="11" fill="#6b6f5c">${germ} de 2 germinadas</text>`;
+    });
+    $("ilustracion").innerHTML = svg;
   }
 
   function renderGrafica() {
@@ -540,6 +599,7 @@
     renderReal();
     renderSensores();
     renderVasos();
+    renderIlustracion();
     renderGrafica();
     renderAlertas();
     renderRiego();
@@ -559,6 +619,10 @@
   // ---------- Inicio ----------
   generar();
   renderizar();
+  fetch("datos_reales.json", { cache: "no-store" })
+    .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then((j) => { MEDICIONES = Array.isArray(j.mediciones) ? j.mediciones : []; renderizar(); })
+    .catch(() => { $("conteoReal").innerHTML = `<p class="empty">No se pudo cargar datos_reales.json. Revise que el archivo esté en el repositorio.</p>`; });
   // Envolver tablas para desplazamiento horizontal en pantallas pequeñas
   document.querySelectorAll("table").forEach((t) => {
     if (t.parentElement && t.parentElement.classList.contains("tw")) return;
