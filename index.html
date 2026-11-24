@@ -486,7 +486,7 @@
   function renderIlustracionReal() {
     const TOP = 40, BASE = 250, SUELO = 182, GW = 74;
     const C = { control: "#6b6f5c", bio: "#00A4B5" };
-    const N = { control: "Control", bio: "Bioestimulante" };
+    const N = { control: "Sin bioestimulante", bio: "Bioestimulante" };
     let svg = "";
     S.vasos.forEach((x) => {
       const i = x.v - 1;
@@ -516,7 +516,7 @@
   function renderIlustracion() {
     const d = S.dia;
     const C = { control: "#6b6f5c", bio: "#00A4B5" };
-    const N = { control: "Control", bio: "Bioestimulante" };
+    const N = { control: "Sin bioestimulante", bio: "Bioestimulante" };
     const TOP = 40, BASE = 250, SUELO = 182, GW = 74;
     let svg = "";
     S.vasos.forEach((x, i) => {
