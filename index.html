@@ -437,7 +437,7 @@
         const chip = `<span class="chip ${x.grupo === "bio" ? "bio" : ""}">${ETIQ[x.grupo]}</span>`;
         const m = ultima(x.v);
         if (!m) return `<tr><td>Vaso ${x.v}</td><td>${chip}</td><td colspan="4" class="muted">Pendiente</td></tr>`;
-        const raiz = m.raiz_mm != null ? fmt(m.raiz_mm, 2) : "—";
+        const raiz = m.raiz_mm != null ? fmt(m.raiz_mm, 2) : (m.sin_crecimiento ? "Sin crecimiento" : "—");
         const germ = m.germinadas != null ? `${m.germinadas} de 2` : "—";
         return `<tr><td>Vaso ${x.v}</td><td>${chip}</td><td>${m.fecha || "Sin fecha"}</td><td class="num">${raiz}</td><td class="num">${germ}</td><td>${m.observacion || ""}</td></tr>`;
       }).join("");
@@ -472,7 +472,7 @@
     $("vasos").innerHTML = S.vasos.map((x) => {
       const hoy = x.germ[S.dia];
       const u = ultima(x.v);
-      const real = u && u.raiz_mm != null ? `Real: <strong>${fmt(u.raiz_mm, 2)} mm</strong>${u.fecha ? " · " + u.fecha : ""}` : "Real: pendiente";
+      const real = u && u.raiz_mm != null ? `Real: <strong>${fmt(u.raiz_mm, 2)} mm</strong>${u.fecha ? " · " + u.fecha : ""}` : (u && u.sin_crecimiento ? "Real: sin crecimiento" : "Real: pendiente");
       return `<div class="vaso-card">
         <h3>Vaso ${x.v}</h3>
         <span class="chip ${x.grupo === "bio" ? "bio" : ""}">${ETIQ[x.grupo]}</span>
@@ -501,11 +501,14 @@
         svg += `<path d="M${cx} ${SUELO} Q ${cx + 4} ${SUELO + largo / 2} ${cx + 1} ${SUELO + largo}" fill="none" stroke="#7a5a3a" stroke-width="2.2" stroke-linecap="round"/>`;
         svg += `<ellipse cx="${cx}" cy="${SUELO + 2}" rx="5" ry="3.5" fill="#d9c08f" stroke="#b59a63"/>`;
       } else {
-        svg += `<text x="${cx}" y="${(TOP + SUELO) / 2}" text-anchor="middle" font-size="12" fill="#6b6f5c">Pendiente</text>`;
+        const y0 = (TOP + SUELO) / 2;
+        svg += u && u.sin_crecimiento
+          ? `<text x="${cx}" y="${y0}" text-anchor="middle" font-size="12" fill="#6b6f5c"><tspan x="${cx}" dy="0">Sin</tspan><tspan x="${cx}" dy="15">crecimiento</tspan></text>`
+          : `<text x="${cx}" y="${y0}" text-anchor="middle" font-size="12" fill="#6b6f5c">Pendiente</text>`;
       }
       svg += `<text x="${cx}" y="${BASE + 22}" text-anchor="middle" font-size="13" font-weight="700" fill="#1A2403">Vaso ${x.v}</text>`;
       svg += `<text x="${cx}" y="${BASE + 38}" text-anchor="middle" font-size="11.5" font-weight="600" fill="${C[x.grupo]}">${N[x.grupo]}</text>`;
-      svg += `<text x="${cx}" y="${BASE + 54}" text-anchor="middle" font-size="11" fill="#6b6f5c">${mm !== null ? fmt(mm, 2) + " mm" + (u.fecha ? " · " + u.fecha : " · sin fecha") : "Sin medición"}</text>`;
+      svg += `<text x="${cx}" y="${BASE + 54}" text-anchor="middle" font-size="11" fill="#6b6f5c">${mm !== null ? fmt(mm, 2) + " mm" + (u.fecha ? " · " + u.fecha : " · sin fecha") : (u && u.sin_crecimiento ? "Sin crecimiento" : "Sin medición")}</text>`;
     });
     $("ilustracionReal").innerHTML = svg;
   }

@@ -2,13 +2,64 @@
   "ensayo": "Bioensayo de frijol común (Phaseolus vulgaris) con bioestimulante de microalgas",
   "instrucciones": "Agregue una entrada dentro de 'mediciones' por cada medición. 'fecha': AAAA-MM-DD (o null si no se conoce). 'vaso': número del 1 al 8. 'raiz_mm': largo de la raíz en milímetros (o null). 'germinadas': número de semillas germinadas de 0 a 2 (o null). 'observacion': texto libre. Vaso 6: control sin bioestimulante. Vasos 1 a 5, 7 y 8: con bioestimulante.",
   "mediciones": [
-    { "fecha": null, "vaso": 1, "raiz_mm": null, "germinadas": null, "observacion": "Con bioestimulante. Sin crecimiento del frijol." },
-    { "fecha": null, "vaso": 2, "raiz_mm": null, "germinadas": null, "observacion": "Con bioestimulante. Sin crecimiento del frijol." },
-    { "fecha": null, "vaso": 3, "raiz_mm": null, "germinadas": null, "observacion": "Con bioestimulante. Sin crecimiento del frijol." },
-    { "fecha": null, "vaso": 4, "raiz_mm": 17.70, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." },
-    { "fecha": null, "vaso": 5, "raiz_mm": 63.09, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." },
-    { "fecha": null, "vaso": 6, "raiz_mm": 33.83, "germinadas": null, "observacion": "Control sin bioestimulante. Fecha por confirmar." },
-    { "fecha": null, "vaso": 7, "raiz_mm": 33.85, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." },
-    { "fecha": null, "vaso": 8, "raiz_mm": 33.85, "germinadas": null, "observacion": "Con bioestimulante. Fecha por confirmar." }
+    {
+      "fecha": null,
+      "vaso": 1,
+      "raiz_mm": null,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. El frijol no creció.",
+      "sin_crecimiento": true
+    },
+    {
+      "fecha": null,
+      "vaso": 2,
+      "raiz_mm": null,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. El frijol no creció.",
+      "sin_crecimiento": true
+    },
+    {
+      "fecha": null,
+      "vaso": 3,
+      "raiz_mm": null,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. El frijol no creció.",
+      "sin_crecimiento": true
+    },
+    {
+      "fecha": null,
+      "vaso": 4,
+      "raiz_mm": 17.7,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. Fecha por confirmar."
+    },
+    {
+      "fecha": null,
+      "vaso": 5,
+      "raiz_mm": 63.09,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. Fecha por confirmar."
+    },
+    {
+      "fecha": null,
+      "vaso": 6,
+      "raiz_mm": 33.83,
+      "germinadas": null,
+      "observacion": "Control sin bioestimulante. Fecha por confirmar."
+    },
+    {
+      "fecha": null,
+      "vaso": 7,
+      "raiz_mm": 33.85,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. Fecha por confirmar."
+    },
+    {
+      "fecha": null,
+      "vaso": 8,
+      "raiz_mm": 33.85,
+      "germinadas": null,
+      "observacion": "Con bioestimulante. Fecha por confirmar."
+    }
   ]
 }
