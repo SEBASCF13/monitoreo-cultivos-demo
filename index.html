@@ -243,7 +243,7 @@
       <div class="muted">Montaje actual</div>
       <div style="font-weight:800;font-size:17px;color:var(--brand-dark)">Frijol común (Phaseolus vulgaris)</div>
       <div class="muted">8 vasos de precipitados · 2 semillas por vaso · 16 semillas en total</div>
-      <div class="muted">Control sin bioestimulante: vasos 1 a 3 · Con bioestimulante: vasos 4 a 8</div>
+      <div class="muted">Control sin bioestimulante: vaso 6 · Con bioestimulante: vasos 1 a 5, 7 y 8</div>
     </div>
     <div class="card" style="min-width:220px">
       <div class="muted">Simulación automática</div>
@@ -340,7 +340,7 @@
     const xs = MEDICIONES.filter((m) => m.vaso === v);
     return xs.length ? xs.reduce((a, b) => ((b.fecha || "") >= (a.fecha || "") ? b : a)) : null;
   };
-  const grupoDe = (v) => (v <= 3 ? "control" : "bio");
+  const grupoDe = (v) => (v === 6 ? "control" : "bio");
   const ETIQ = { control: "Sin bioestimulante", bio: "Con bioestimulante" };
   const COLOR = { control: "#6b6f5c", bio: "#00A4B5" };
 
@@ -424,11 +424,13 @@
 
   // ---------- Render ----------
   function renderReal() {
-    const vasosCon = (grupo) => new Set(MEDICIONES.filter((m) => grupoDe(m.vaso) === grupo).map((m) => m.vaso)).size;
+    const totalGrupo = (grupo) => S.vasos.filter((x) => x.grupo === grupo).length;
+    const vasosCon = (grupo) => new Set(MEDICIONES.filter((m) => m.raiz_mm != null && grupoDe(m.vaso) === grupo).map((m) => m.vaso)).size;
+    const registros = MEDICIONES.filter((m) => m.raiz_mm != null).length;
     $("conteoReal").innerHTML =
-      `<div class="c">Sin bioestimulante<strong>${vasosCon("control")} de 3</strong>vasos con medición</div>` +
-      `<div class="c">Con bioestimulante<strong>${vasosCon("bio")} de 5</strong>vasos con medición</div>` +
-      `<div class="c">Registros cargados<strong>${MEDICIONES.length}</strong>mediciones</div>`;
+      `<div class="c">Sin bioestimulante<strong>${vasosCon("control")} de ${totalGrupo("control")}</strong>vasos con medición</div>` +
+      `<div class="c">Con bioestimulante<strong>${vasosCon("bio")} de ${totalGrupo("bio")}</strong>vasos con medición</div>` +
+      `<div class="c">Registros cargados<strong>${registros}</strong>mediciones</div>`;
     $("tablaReal").innerHTML =
       `<tr><th>Vaso</th><th>Grupo</th><th>Fecha</th><th class="num">Raíz (mm)</th><th class="num">Germinadas</th><th>Observación</th></tr>` +
       S.vasos.map((x) => {
